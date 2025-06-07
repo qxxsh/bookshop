@@ -109,14 +109,6 @@
 - **Maven**: 3.6.x 或更高版本
 
 
-### 测试账户
-
-| 学号 | 密码 | 姓名 | 说明 |
-|------|------|------|------|
-| 1505119 | 675844 | 余文乐 | 管理员账户 |
-| 1505101 | 549256 | 许玮甯 | 普通用户 |
-| 1505112 | 123456 | 彭于晏 | 普通用户 |
-
 ## 📦 详细安装
 
 ### 1. 环境准备
@@ -128,11 +120,6 @@ java -version
 
 # 如果没有安装Java 11+，请下载安装
 # https://adoptopenjdk.net/
-```
-
-
-```
-
 ```
 
 ### 3. 后端配置
@@ -778,27 +765,6 @@ npm run build
 # 例如：nginx、apache等
 ```
 
-#### Nginx配置示例
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    
-    # 前端静态文件
-    location / {
-        root /path/to/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-    
-    # API代理
-    location /api/ {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
 
 #### 后端生产部署
 ```bash
@@ -840,76 +806,7 @@ sudo systemctl start bookshop
 sudo systemctl status bookshop
 ```
 
-### Docker部署
 
-#### Dockerfile (后端)
-```dockerfile
-FROM openjdk:11-jre-slim
-
-WORKDIR /app
-
-COPY target/bookshop-1.0.0.jar app.jar
-
-EXPOSE 8080
-
-CMD ["java", "-jar", "app.jar"]
-```
-
-#### Dockerfile (前端)
-```dockerfile
-FROM node:16-alpine as build
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-```
-
-#### docker-compose.yml
-```yaml
-version: '3.8'
-
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: bookshop
-      MYSQL_ROOT_PASSWORD: root123
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docs/sql/bookshop.sql:/docker-entrypoint-initdb.d/init.sql
-
-  backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bookshop
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root123
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
-volumes:
-  mysql_data:
-```
 
 ```bash
 # 启动所有服务
@@ -923,35 +820,6 @@ docker-compose down
 ```
 
 ## ❓ 常见问题
-
-### 安装问题
-
-**Q: npm install 失败怎么办？**
-```bash
-# 清除缓存
-npm cache clean --force
-
-# 删除node_modules重新安装
-rm -rf node_modules package-lock.json
-npm install
-
-# 或使用cnpm
-npm install -g cnpm --registry=https://registry.npm.taobao.org
-cnpm install
-```
-
-**Q: Maven依赖下载失败？**
-```bash
-# 清除本地仓库
-rm -rf ~/.m2/repository
-
-# 重新下载依赖
-mvn clean install -U
-
-# 或配置阿里云镜像
-# 编辑 ~/.m2/settings.xml
-```
-
 **Q: 数据库连接失败？**
 ```yaml
 # 检查数据库配置
@@ -961,204 +829,3 @@ spring:
     username: root
     password: your_password
 ```
-
-### 运行问题
-
-**Q: 前端页面空白？**
-1. 检查后端是否启动（访问 http://localhost:8080/api/category/list）
-2. 检查浏览器控制台错误信息
-3. 确认CORS配置正确
-
-**Q: 图片不显示？**
-1. 确认图片文件存在于 `frontend/public/img/book-list/article/` 目录
-2. 检查图片文件名是否正确（1.jpg-87.jpg, default.jpg）
-3. 确认图片关联数据正确
-
-**Q: 购物车功能异常？**
-1. 检查用户登录状态
-2. 确认数据库表结构正确
-3. 查看后端日志错误信息
-
-**Q: 登录失败？**
-1. 使用提供的测试账户
-2. 检查数据库user表数据
-3. 确认密码加密方式
-
-### 开发问题
-
-**Q: 如何添加新的API接口？**
-1. 在Controller中添加新方法
-2. 在Service中实现业务逻辑
-3. 在前端调用新接口
-4. 更新API文档
-
-**Q: 如何修改数据库结构？**
-1. 修改实体类
-2. 更新Mapper XML文件
-3. 执行数据库迁移脚本
-4. 更新相关业务代码
-
-**Q: 如何自定义样式？**
-1. 修改Vue组件的scoped样式
-2. 调整CSS变量和主题色
-3. 使用响应式设计原则
-
-## 📝 更新日志
-
-### v1.0.0 (2024-01-15)
-
-**新功能**
-- ✨ 完整的用户认证系统
-- ✨ 图书浏览和搜索功能
-- ✨ 购物车管理功能
-- ✨ 图书上传和管理
-- ✨ 求书发布和管理
-- ✨ 现代化UI设计
-- ✨ 响应式布局支持
-
-**修复问题**
-- 🐛 修复图片显示问题
-- 🐛 解决购物车数据关联错误
-- 🐛 修复用户信息不匹配问题
-- 🐛 解决CORS跨域问题
-- 🐛 修复图片上传和关联逻辑
-
-**优化改进**
-- 🚀 优化数据库查询性能
-- 🚀 改进用户体验和界面交互
-- 🚀 增强错误处理和提示
-- 🚀 完善API接口文档
-- 🚀 优化图片加载和缓存
-
-**技术债务**
-- 🔧 删除所有调试代码
-- 🔧 统一代码风格
-- 🔧 完善注释文档
-- 🔧 优化项目结构
-
-## 🤝 贡献指南
-
-我们欢迎所有形式的贡献！
-
-### 如何贡献
-
-1. **Fork项目**
-   ```bash
-   # 点击GitHub页面的Fork按钮
-   git clone https://github.com/your-username/bookshop.git
-   ```
-
-2. **创建功能分支**
-   ```bash
-   git checkout -b feature/new-feature
-   ```
-
-3. **提交更改**
-   ```bash
-   git add .
-   git commit -m "feat: 添加新功能"
-   ```
-
-4. **推送分支**
-   ```bash
-   git push origin feature/new-feature
-   ```
-
-5. **创建Pull Request**
-   - 访问GitHub页面
-   - 点击"New Pull Request"
-   - 填写详细的说明信息
-
-### 提交规范
-
-使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
-
-- `feat`: 新功能
-- `fix`: 修复bug
-- `docs`: 文档更新
-- `style`: 代码样式调整
-- `refactor`: 代码重构
-- `test`: 测试相关
-- `chore`: 构建过程或辅助工具的变动
-
-### 代码规范
-
-**前端代码规范**
-- 使用2空格缩进
-- 组件命名使用PascalCase
-- 变量命名使用camelCase
-- 添加必要的注释
-
-**后端代码规范**
-- 使用4空格缩进
-- 类名使用PascalCase
-- 方法名使用camelCase
-- 添加Javadoc注释
-
-### 问题反馈
-
-- 🐛 **Bug反馈**: 使用Issue模板提交bug报告
-- 💡 **功能建议**: 描述新功能的需求和用例
-- ❓ **问题求助**: 提供详细的环境信息和错误日志
-
-## 📄 许可证
-
-本项目采用 [MIT License](LICENSE) 许可证。
-
-```
-MIT License
-
-Copyright (c) 2024 BookShop
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## 👥 开发团队
-
-- **项目负责人**: Daniel
-- **前端开发**: Vue.js团队
-- **后端开发**: Spring Boot团队
-- **UI设计**: 设计团队
-
-## 🔗 相关链接
-
-- 📖 **项目文档**: [查看文档](./docs/)
-- 🐛 **问题反馈**: [提交Issue](../../issues)
-- 💬 **讨论交流**: [GitHub Discussions](../../discussions)
-- 📧 **联系我们**: bookshop@example.com
-
-## 🙏 致谢
-
-感谢以下开源项目和技术支持：
-
-- [Vue.js](https://vuejs.org/) - 渐进式JavaScript框架
-- [Spring Boot](https://spring.io/projects/spring-boot) - Java应用开发框架
-- [MyBatis Plus](https://baomidou.com/) - MyBatis增强工具
-- [MySQL](https://www.mysql.com/) - 关系型数据库
-- [Vite](https://vitejs.dev/) - 前端构建工具
-
----
-
-<div align="center">
-
-**⭐ 如果这个项目对你有帮助，请给它一个Star！⭐**
-
-**让知识传递，让书香延续 📚**
-
-</div> 
